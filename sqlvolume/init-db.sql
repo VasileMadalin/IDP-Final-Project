@@ -1,0 +1,25 @@
+CREATE DATABASE IF NOT EXISTS Usersdb;
+USE Usersdb;
+
+CREATE Table IF NOT EXISTS Users (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(128) UNIQUE,
+    passorwd VARCHAR(128)
+);
+
+CREATE DATABASE IF NOT EXISTS Tweetsdb;
+USE Tweetsdb;
+
+CREATE Table IF NOT EXISTS Tweets (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    author VARCHAR(128) UNIQUE,
+    messagetweets VARCHAR(128)
+);
+
+CREATE Table IF NOT EXISTS Comments (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    idtweet INT NOT NULL,
+    author VARCHAR(128) UNIQUE,
+    comment VARCHAR(128)
+);
+

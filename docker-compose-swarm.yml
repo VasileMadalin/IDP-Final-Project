@@ -1,0 +1,168 @@
+version: '3.8'
+
+services:
+    gateway:
+        image: 2820001/gatewayserviceswarm:v1_0
+        command: sh -c "uvicorn main:app --reload --host 0.0.0.0"
+        environment:
+          COMMENTS_SERVICE_URL: http://comments:8000
+          TWEETS_SERVICE_URL: http://tweets:8000
+          AUTH_SERVICE_URL: http://auth:8000
+        deploy:
+          replicas: 3
+          placement:
+              max_replicas_per_node: 2
+          update_config:
+              parallelism: 2
+              order: start-first
+          rollback_config:
+              parallelism: 2
+              order: stop-first
+        ports:
+          - 8001:8000
+        networks:
+          - comments_network
+          - tweets_network
+          - auth_network
+          - network-api
+          - network-gui
+          - prometheus_network
+        depends_on:
+          - comments
+          - tweets
+          - auth
+          - mysql
+
+    comments:
+        depends_on:
+          - mysql
+        image: 2820001/commentsserviceswarm:v1_4
+        command: sh -c "uvicorn main:app --reload --host 0.0.0.0"
+        networks:
+          - comments_network
+        environment:
+          MYSQL_PORT: 3306
+        deploy:
+          replicas: 2
+          placement:
+              max_replicas_per_node: 1
+          update_config:
+              order: start-first
+          rollback_config:
+              order: stop-first
+
+    tweets:
+        depends_on:
+          - mysql
+        image: 2820001/tweetsserviceswarm:v1_4
+        command: sh -c "uvicorn main:app --reload --host 0.0.0.0"
+        networks:
+          - tweets_network
+        environment:
+          MYSQL_PORT: 3306
+        deploy:
+          replicas: 2
+          placement:
+              max_replicas_per_node: 1
+          update_config:
+              order: start-first
+          rollback_config:
+              order: stop-first
+
+    auth:
+        depends_on:
+          - mysql
+        image: 2820001/authserviceswarm:v1_4
+        command: sh -c "uvicorn main:app --reload --host 0.0.0.0"
+        networks:
+          - auth_network
+        environment:
+          MYSQL_PORT: 3306
+        deploy:
+          replicas: 2
+          placement:
+              max_replicas_per_node: 1
+          update_config:
+              order: start-first
+          rollback_config:
+              order: stop-first
+
+    mysql:
+        image: mysql:5.7
+        container_name: mysql
+        ports:
+          - "32000:3306"
+        volumes:
+          - ./sqlvolume/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+          - idp-db:/var/lib/mysql
+        networks:
+          - tweets_network
+          - auth_network
+          - comments_network
+          - network-api
+          - network-gui
+        environment:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_PASSWORD: root
+        deploy:
+          placement:
+              constraints:
+                  - "node.role==manager"
+        
+    phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      container_name: pma
+      restart: always
+      ports:
+        - "4050:80"
+      environment:
+        PMA_HOST: mysql
+      depends_on:
+        - mysql
+      networks:
+        - network-api
+        - network-gui
+
+    portainer:
+      image: portainer/portainer-ce:linux-amd64
+      ports:
+        - 9443:9443
+      volumes:
+        - data:/data
+        - /var/run/docker.sock:/var/run/docker.sock
+      restart: unless-stopped
+
+    prometheus:
+      image: prom/prometheus:v2.30.3
+      ports:
+        - 9000:9090
+      volumes:
+        - ./prometheus:/etc/prometheus
+        - prometheus-data:/prometheus
+      command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yml
+      links:
+        - auth:auth
+        - tweets:tweets
+        - comments:comments
+      depends_on:
+        - auth
+        - tweets
+        - comments
+      networks:
+        - prometheus_network
+
+
+volumes:
+  prometheus-data:
+  data:
+  idp-db:
+
+networks:
+  prometheus_network:
+  comments_network:
+  tweets_network:
+  auth_network:
+  network-api:
+    name: network-api
+  network-gui:
+    name: network-gui
