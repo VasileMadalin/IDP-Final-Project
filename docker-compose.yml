@@ -22,6 +22,36 @@ services:
           - tweets
           - auth
           - mysql
+  
+    kong:
+        image: kong:latest
+        volumes:
+            - ./Kong:/usr/local/kong/declarative
+        environment:
+            KONG_DATABASE: 'off'
+            KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yml
+            KONG_PROXY_ACCESS_LOG: /dev/stdout
+            KONG_ADMIN_ACCESS_LOG: /dev/stdout
+            KONG_PROXY_ERROR_LOG: /dev/stderr
+            KONG_ADMIN_ERROR_LOG: /dev/stderr
+            KONG_ADMIN_LISTEN: 0.0.0.0:80, 0.0.0.0:8444 ssl
+        ports:
+            - 80:8000
+            - 443:8443
+            - 8002:8001
+            - 8444:8444
+        networks:
+          - comments_network
+          - tweets_network
+          - auth_network
+          - network-api
+          - network-gui
+          - prometheus_network
+        depends_on:
+          - comments
+          - tweets
+          - auth
+          - mysql
 
     comments:
         depends_on:

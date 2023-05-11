@@ -1,0 +1,23 @@
+_format_version: "2.1"
+
+services:
+  - name: auth
+    url: http://auth:8000
+    routes:
+      - name: auth
+        paths:
+          - /x
+          
+  - name: tweets
+    url: http://tweets:8000
+    routes:
+      - name: tweets
+        paths:
+          - /y
+
+  - name: comments
+    url: http://comments:8000
+    routes:
+      - name: comments
+        paths:
+          - /z
