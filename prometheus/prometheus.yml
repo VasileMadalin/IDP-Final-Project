@@ -1,16 +1,20 @@
-global:
-  scrape_interval: 30s
-  scrape_timeout: 10s
-
-rule_files:
-  - alert.yml
-
 scrape_configs:
-  - job_name: services
-    metrics_path: /metrics
+  # Make Prometheus scrape itself for metrics.
+  - job_name: 'prometheus'
     static_configs:
-      - targets:
-          - 'prometheus:9090'
-          - 'localhost:8001'
-          - 'tweets:8001'
-          - 'comments:8001'
+    - targets: ['192.168.0.18:9000']
+    - targets: ['192.168.0.17:9000']
+
+  # Create a job for Docker daemons.
+  - job_name: 'docker'
+    dockerswarm_sd_configs:
+      - host: unix:///var/run/docker.sock
+        role: nodes
+    relabel_configs:
+      # Fetch metrics on port 9323.
+      - source_labels: [meta_dockerswarm_node_address]
+        target_label: address
+        replacement: $1:9323
+      # Set hostname as instance label
+      - source_labels: [meta_dockerswarm_node_hostname]
+        target_label: instance

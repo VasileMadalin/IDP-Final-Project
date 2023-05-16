@@ -158,6 +158,8 @@ services:
 
     portainer:
       image: portainer/portainer-ce:linux-amd64
+      environment:
+        - PORTAINER_TLS_ENABLE=false
       ports:
         - 9443:9443
       volumes:
