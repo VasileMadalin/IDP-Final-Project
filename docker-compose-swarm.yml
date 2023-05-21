@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
     gateway:
-        image: 2820001/gatewayserviceswarm:v1_0
+        image: 2820001/gatewayserviceswarm:v1_5
         command: sh -c "uvicorn main:app --reload --host 0.0.0.0"
         environment:
           COMMENTS_SERVICE_URL: http://comments:8000
@@ -69,7 +69,7 @@ services:
     comments:
         depends_on:
           - mysql
-        image: 2820001/commentsserviceswarm:v1_4
+        image: 2820001/commentsserviceswarm:v1_5
         command: sh -c "uvicorn main:app --reload --host 0.0.0.0"
         networks:
           - comments_network
@@ -87,7 +87,7 @@ services:
     tweets:
         depends_on:
           - mysql
-        image: 2820001/tweetsserviceswarm:v1_4
+        image: 2820001/tweetsserviceswarm:v1_5
         command: sh -c "uvicorn main:app --reload --host 0.0.0.0"
         networks:
           - tweets_network
@@ -105,7 +105,7 @@ services:
     auth:
         depends_on:
           - mysql
-        image: 2820001/authserviceswarm:v1_4
+        image: 2820001/authserviceswarm:v1_5
         command: sh -c "uvicorn main:app --reload --host 0.0.0.0"
         networks:
           - auth_network
